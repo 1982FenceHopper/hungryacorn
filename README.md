@@ -4,7 +4,7 @@
 
 **_PSA: THIS IS A HIGHLY EXPERIMENTAL MODEL, THIS SHOULD NOT BE USED IN CRITICAL APPLICATIONS, [SEE THIS FOR SIDE DETAILS](#Stuff-I-wanna-say)_**
 
-HungryAcorn is an LSTM Deep Neural Network that predicts the food prices of various countries suffering from food insecurity worldwide. One of it's most prominent (albeit experimental and highly alpha) features, is it's ability to forecast future prices currency-agnostically, eliminating the need to convert local currencies to a stable exchange (e.g. USD, EUR) prior to forecasting future values
+HungryAcorn is an LSTM Deep Neural Network that predicts the food prices of various countries suffering from food insecurity worldwide. One of it's most prominent (albeit experimental and highly alpha) features, is it's ability to forecast future prices currency-agnostically, eliminating the need to convert local currencies to a stable exchange (e.g. USD, EUR) prior to forecasting future values (See [[3]](#Notes) for a PS on this)
 
 The model was largely trained on available data from the [Humantarian Data Exchange](https://data.humdata.org/), namely the [World Food Programme Food Pricing Data](https://www.wfp.org/) (See [[1]](#Notes) for details on where)
 
@@ -94,6 +94,8 @@ Average loss
 [[1]](#Notes): The WFP data was from the HDX Data Platform, [See this link](https://data.humdata.org/dataset/?organization=wfp&q=Food+Prices&sort=score+desc%2C+last_modified+desc&ext_page_size=25)
 <br />
 [[2]](#Notes): Raw CSV is at `src/data/csv/wfp_food_prices_nga.csv`, which is the [WFP food pricing data for Nigeria](https://data.humdata.org/dataset/wfp-food-prices-for-nigeria)
+
+[[3]](#Notes): AgnosticScaler is basically a glorified min-max scaler, but it stores the relative differential parameters for each year, which so far I haven't seen sklearn's MinMaxScaler do (or it probably does and I just did the biggest placebo effect to myself, let me know if so via an issue please 😭)
 
 ## Stuff I wanna say
 
