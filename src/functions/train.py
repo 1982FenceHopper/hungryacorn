@@ -37,16 +37,17 @@ def train(checkpoint_path, sequence_length, data):
     model.load_state_dict(checkpoint['model_state_dict'])    
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
+    horizon = checkpoint['horizon']
     
     model.train().to("cuda:0")
     
     torch.autograd.set_detect_anomaly(True)
-    for epoch in tqdm(range(epoch), desc="Epoch"):
+    for _e in tqdm(range(epoch), desc="Epoch"):
         for bx, by in train_dl:
             optimizer.zero_grad()
             bx, by = bx.to("cuda:0"), by.to("cuda:0")
             y_pred = model(bx)
-            loss = torch.sqrt(criterion(y_pred.squeeze(), by) + 1e-6)
+            loss = torch.sqrt(torch.clamp(criterion(y_pred.squeeze(), by) + 1e-6, min=0.0))
             loss_total += loss.item()
             loss.backward()
             optimizer.step()
@@ -55,13 +56,14 @@ def train(checkpoint_path, sequence_length, data):
     print(f"Average Training Loss (RMSE): {loss_total}")
     
     current_time = datetime.now(timezone.utc)
-    filename = f"{current_time.isoformat().replace(':', '_').replace('+', '_').split('.')[0]}_lstm.pth"
+    filename = f"{current_time.isoformat().replace(':', '_').replace('+', '_').split('.')[0]}_capstone.pth"
     
     torch.save({
         "epoch": epoch,
+        "horizon": horizon,
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "train_loss": loss_total,
-    }, os.path.join(here(), "src", "models", "checkpoints", filename))
+    }, os.path.join(here(), "src", "models", "checkpoints_capstone", filename))
     
-    print(f"Model Checkpoint Saved To: {os.path.join(here(), 'src', 'models', 'checkpoints', filename)}")
+    print(f"Model Checkpoint Saved To: {os.path.join(here(), 'src', 'models', 'checkpoints_capstone', filename)}")

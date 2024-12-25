@@ -16,9 +16,9 @@ from pyprojroot import here
 from datetime import datetime, timezone
 from time import time
 
-SEQ_LENGTH = 12
-NUM_EPOCHS = 100
-HORIZON = SEQ_LENGTH
+SEQ_LENGTH = 96
+NUM_EPOCHS = 200
+HORIZON = 48
 
 NGA_FP_CSV = os.path.join(here(), 'src', 'data', 'csv', 'wfp_food_prices_nga.csv')
 
@@ -135,7 +135,7 @@ def main():
         "train_loss": avg_train_loss,
         "test_loss": avg_loss,
         "horizon": HORIZON
-    }, os.path.join(here(), "src", "models", "checkpoints", f"{current_time.isoformat().replace(':', '_').replace('+', '_').split('.')[0]}_lstm.pth"))
+    }, os.path.join(here(), "src", "models", "checkpoints_capstone", f"{current_time.isoformat().replace(':', '_').replace('+', '_').split('.')[0]}_capstone.pth"))
     
     del model, criterion, optimizer
     torch.cuda.empty_cache()
@@ -147,10 +147,11 @@ if __name__ == '__main__':
         1: "inference",
         2: "export",
         3: "test",
-        4: "exit"
+        4: "initialize",
+        5: "exit"
     }
     
-    init = input("Choose an option:\n[0] Train\n[1] Inferencing\n[2] Export\n[3] Test ONNX Model\n[4] Exit\n\n> ")
+    init = input("Choose an option:\n[0] Train\n[1] Inferencing\n[2] Export\n[3] Test ONNX Model\n[4] Initialize\n[5] Exit\n\n> ")
     if int(init) not in options:
         print("Invalid option.")
         exit()
@@ -165,13 +166,13 @@ if __name__ == '__main__':
                 exit()
             country = input("Enter country: ")
             print("Retrieving dataset...")
-            req = requests.get(f"http://localhost:2190/api/v1/fp?country={country}")
+            req = requests.get(f"http://localhost:2190/api/v1/hdx/fp?country={country}")
             csv_data = req.text
             csv_filename = req.headers["ORIGIN-FILENAME"]
             print("Augmenting data...")
             data = load_data(csv_content=io.StringIO(csv_data))
             print("Training selected checkpoint...")
-            train(sel_chkt, 12, data)
+            train(sel_chkt, 96, data)
         elif options[int(init)] == "inference":
             print("\nEvaluation Mode\n")
             sel_chkt = input("Enter relative path to checkpoint: ")
@@ -180,13 +181,13 @@ if __name__ == '__main__':
                 exit()
             country = input("Enter country: ")
             print("Retrieving dataset...")
-            req = requests.get(f"http://localhost:2190/api/v1/fp?country={country}")
+            req = requests.get(f"http://localhost:2190/api/v1/hdx/fp?country={country}")
             csv_data = req.text
             csv_filename = req.headers["ORIGIN-FILENAME"]
             print("Augmenting data...")
             data = load_data(csv_content=io.StringIO(csv_data))
             print("Evaluating selected checkpoint...")
-            inference(sel_chkt, 12, data)
+            inference(sel_chkt, 96, data)
         elif options[int(init)] == "export":
             print("\nONNXRuntime Export Mode\n")
             sel_chkt = input("Enter relative path to checkpoint to export: ")
@@ -202,7 +203,7 @@ if __name__ == '__main__':
                 exit()
             country = input("Enter country: ")
             print("Retrieving dataset...")
-            req = requests.get(f"http://localhost:2190/api/v1/fp?country={country}")
+            req = requests.get(f"http://localhost:2190/api/v1/hdx/fp?country={country}")
             csv_data = req.text
             csv_filename = req.headers["ORIGIN-FILENAME"]
             print("Augmenting data...")
@@ -212,6 +213,9 @@ if __name__ == '__main__':
             onnx_test(sel_model, data)
             end = time()
             print(f"\n\nONNX Test Time: {(end - start):.2f} seconds")
+        elif options[int(init)] == "initialize":
+            print("\nInitializing Model\n")
+            main()
             
     
     # if (len(sys.argv) > 2):

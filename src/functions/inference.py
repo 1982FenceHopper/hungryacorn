@@ -7,7 +7,7 @@ from functions import create_seq
 import numpy as np
 import pandas as pd
 
-#? Inferencing results in target size = torch.Size([32]) and input size = torch.Size([12, 32]), so PyTorch warns about broadcasting.
+#? Inferencing results in target size = torch.Size([32]) and input size = torch.Size([sequence_length, 32]), so PyTorch warns about broadcasting.
 #? This doesn't seem to be affecting it at all though, so it's fine for now.
 
 def inference(checkpoint_path, sequence_length, data):
@@ -44,10 +44,11 @@ def inference(checkpoint_path, sequence_length, data):
     model.load_state_dict(checkpoint['model_state_dict'])    
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
+    horizon = checkpoint['horizon']
     
     model.eval().to("cuda:0")
     
-    predictions = []
+    predictions = np.empty((0, horizon))
     
     with torch.no_grad():
         for bx, by in infer_dl:
@@ -56,7 +57,7 @@ def inference(checkpoint_path, sequence_length, data):
             print("Current Input Shape: ", current_input.shape)
             
             batch_predictions = []
-            for _ in range(sequence_length):
+            for _ in range(horizon):
                 output = model(current_input.float())
                 if output.dim() == 2:
                     output = torch.unsqueeze(output, dim=-1)
@@ -70,7 +71,8 @@ def inference(checkpoint_path, sequence_length, data):
             loss = torch.sqrt(criterion(batch_predictions, by.to("cuda:0")) + 1e-6)
             loss_total += loss.item()
             
-            predictions.extend(batch_predictions.to("cpu").numpy().reshape(-1, sequence_length))
+            print(batch_predictions.shape)
+            predictions = np.concatenate((predictions, batch_predictions.to("cpu").numpy().reshape(-1, horizon)))
             
     loss_total /= len(infer_dl)
     predictions = mm_scaler.inverse_transform(np.array(predictions).reshape(-1, 1)).flatten()

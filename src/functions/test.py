@@ -15,7 +15,7 @@ def onnx_test(model_path, data):
     
     data["price"] = agn_scaler.fit_transform(data)
     scaled = mm_scaler.fit_transform(data[["price"]])
-    x, y = create_seq(scaled, 12)
+    x, y = create_seq(scaled, 96)
     x = np.reshape(x, (x.shape[0], x.shape[1], 1))
     
     x = np.array(x, dtype=np.float32)
